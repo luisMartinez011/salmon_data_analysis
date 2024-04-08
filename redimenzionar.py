@@ -19,9 +19,11 @@ for nombre_archivo in os.listdir(directorio_imagenes):
     if nombre_archivo.endswith(".jpg"):
         ruta_imagen = os.path.join(directorio_imagenes, nombre_archivo)
         imagen = cv2.imread(ruta_imagen)
+        cv2.imshow('Imagen Original', imagen)
+        cv2.waitKey(0)
 
         # Convertir RGB a HSV
-        hsv = cv2.cvtColor(imagen, cv2.COLOR_RGB2HSV)
+        hsv = cv2.cvtColor(imagen, cv2.COLOR_BGR2HSV)
 
         # Umbralizar la imagen HSV para obtener solo los colores de acuerdo al umbral del color del salmon
         mask = cv2.inRange(hsv, lower_salmon, upper_salmon)
@@ -31,15 +33,21 @@ for nombre_archivo in os.listdir(directorio_imagenes):
 
         # Recortar un pedazo del objeto color salmon si se detecta
         if contours:
-            # Seleccionar el contorno más grande (suponiendo que sea el objeto salmon)
+            # Seleccionar el contorno con el área más grande
             largest_contour = max(contours, key=cv2.contourArea)
 
-            # Obtener las coordenadas del objeto
+            # Encontrar la caja delimitadora ajustada al contorno
             x, y, w, h = cv2.boundingRect(largest_contour)
 
-            # Recortar el área del objeto salmon de la imagen original
-            imagen_recortada = recortar_roi(imagen, x, y, w, h)
-            cv2.imwrite(directorio_imagenes_modificadas, imagen_recortada)
+            # Tamaño del paper
+            porcion_w = 299
+            porcion_h = 86
 
+            # Recortar la porción de la imagen umbralizada
+            imagen_recortada = recortar_roi(imagen, x, y, porcion_w, porcion_h)
 
+            # Mostrar la imagen recortada
+            cv2.imshow('Imagen Recortada', imagen_recortada)
+            cv2.waitKey(0)
+            cv2.imwrite(os.path.join(directorio_imagenes_modificadas, nombre_archivo), imagen_recortada)
 print("Proceso completado.")
