@@ -23,21 +23,21 @@ for nombre_archivo in os.listdir(directorio_imagenes):
         # Convertir RGB a HSV
         hsv = cv2.cvtColor(imagen, cv2.COLOR_RGB2HSV)
 
-        # Umbralizar la imagen HSV para obtener solo los colores azules
+        # Umbralizar la imagen HSV para obtener solo los colores de acuerdo al umbral del color del salmon
         mask = cv2.inRange(hsv, lower_salmon, upper_salmon)
 
         # Encontrar contornos en la máscara
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-        # Recortar un pedazo del objeto azul si se detecta
+        # Recortar un pedazo del objeto color salmon si se detecta
         if contours:
-            # Seleccionar el contorno más grande (suponiendo que sea el objeto azul)
+            # Seleccionar el contorno más grande (suponiendo que sea el objeto salmon)
             largest_contour = max(contours, key=cv2.contourArea)
 
-            # Obtener las coordenadas del rectángulo delimitador del contorno
+            # Obtener las coordenadas del objeto
             x, y, w, h = cv2.boundingRect(largest_contour)
 
-            # Recortar el área del objeto azul de la imagen original
+            # Recortar el área del objeto salmon de la imagen original
             imagen_recortada = recortar_roi(imagen, x, y, w, h)
             cv2.imwrite(directorio_imagenes_modificadas, imagen_recortada)
 
