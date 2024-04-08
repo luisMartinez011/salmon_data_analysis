@@ -28,6 +28,10 @@ for nombre_archivo in os.listdir(directorio_imagenes):
         # Umbralizar la imagen HSV para obtener solo los colores de acuerdo al umbral del color del salmon
         mask = cv2.inRange(hsv, lower_salmon, upper_salmon)
 
+        # Aplicar operaciones morfológicas para reducir el ruido en la máscara
+        kernel = np.ones((5, 5), np.uint8)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+
         # Encontrar contornos en la máscara
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
