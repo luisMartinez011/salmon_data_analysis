@@ -5,9 +5,9 @@ import numpy as np
 directorio_imagenes = './datasets/original-dataset/test'
 directorio_imagenes_modificadas = './datasets/modified-dataset/test'
 
-# Definir el rango de color salmon en HSV
-lower_salmon = np.array([100, 100, 0])
-upper_salmon = np.array([255, 255, 100])
+# Definir el rango de color salmón en HSV
+lower_salmon = np.array([0, 100, 100])
+upper_salmon = np.array([30, 255, 255])
 
 
 # Función para recortar una región de interés (ROI) de la imagen original
