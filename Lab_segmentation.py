@@ -3,16 +3,21 @@ import cv2
 import numpy as np
 from skimage import data
 from skimage.color import rgb2lab, lch2lab, lab2lch,deltaE_ciede94
+import sys
+
+import matplotlib.pyplot as plt
 
 
 
+
+np.set_printoptions(threshold=sys.maxsize)
 
 #Links/ Bibliografia
 # https://stackoverflow.com/questions/65509486/return-boolean-from-cv2-inrange-if-color-is-present-in-mask
 
 class LabSegmentation():
 
-    directorio_imagenes = './datasets/original-dataset/train/farmstest-3_jpg.rf.a29f651a56b87147437c5abd12e68c66.jpg'
+
 
     salmon_fan_score = {
         '20': [72.73, 23.5, 16.35],
@@ -49,25 +54,28 @@ class LabSegmentation():
         '33': [0.40, 1.00, 1.60],
         '34': [0.50, 1.40, 2.00],
     }
-    def  __init__(self):
-        self.original_image = self.get_image()
+    def  __init__(self,imagen_path):
+        self.original_image = self.get_image(imagen_path)
 
-    def example(self):
-        img = data.astronaut()
-        img_lab = rgb2lab(img)
-        delta_e = deltaE_ciede94(img_lab, [3,5,6])
-        print(delta_e)
-        img_lch = lab2lch(img_lab)
-        img_lab2 = lch2lab(img_lch)
 
-    def get_image(self):
-        img_original = cv2.imread(self.directorio_imagenes)
-        imagen_rgb = cv2.cvtColor(img_original, cv2.COLOR_BGR2RGB)
+    #Revisar pq la imagen me sale en azul
+    def get_image(self,imagen_path):
+        img_original = cv2.imread(imagen_path)
+        imagen_rgb = cv2.cvtColor(img_original, cv2.COLOR_RGB2BGR)
+        # cv2.imshow('Imagen Original', imagen_rgb)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
+
+        # plt.imshow(imagen_rgb)
+        # plt.title('Displaying image using Matplotlib')
+        # plt.show()
         return imagen_rgb
 
     def get_ranges(self):
         lab_ranges = self.lab_ranges
-        arreglo_vacio = np.zeros_like(self.imagen)
+        #Pixeles clasificados a que SalmonFan pertencen
+        height, width, _ = self.lab_image.shape
+        salmon_score = np.zeros((height, width), dtype=np.uint8)
 
         for score, colors in self.salmon_fan_score.items():
             l = colors[0]
@@ -96,14 +104,13 @@ class LabSegmentation():
                 'a': a_upper_range,
                 'b': b_upper_range
                 }
-            # lowerRange = np.array([l_lower_range, a_lower_range, b_lower_range] , dtype="uint16")
-            # upperRange = np.array([l_upper_range, a_upper_range, b_upper_range], dtype="uint16")
 
+            self.compare_salmonfan(lowerRange, upperRange, score,salmon_score)
 
-            self.compare_salmonfan(lowerRange, upperRange)
-            # self.convert_to_lab(image)
-            # self.example(image)
-
+        self.salmon_score = salmon_score
+        # print(salmon_score)
+        elementos_no_cero = np.count_nonzero(salmon_score)
+        print('numero de pixeles clasificados: ', elementos_no_cero)
 
 
     #* Convierte la imagen a lab
@@ -122,8 +129,10 @@ class LabSegmentation():
                 # Get the BGR values of the pixel
                 R,G,B = original_image[x, y]
                 l,a,b = self.rgb_to_lab(R,G,B)
+                # TODO: Hacer pruebas con este
+                # if 44 < l < 72:
+                #     print('gratula: ', l)
 
-                # Update the pixel values in the modified image
                 modified_image[x,y] = [l,a,b]
         self.lab_image = modified_image
 
@@ -178,50 +187,88 @@ class LabSegmentation():
         Lab_OpenCV = [L, a, b];
         return Lab_OpenCV
 
-    def compare_salmonfan(self, lowerRange, upperRange):
-        #TODO: Convertir bien la imagen en formato lab de acuerdo a lo del paper
-        #TODO:
+    def compare_salmonfan(self, lowerRange, upperRange, current_score, salmon_score):
 
-         # Make a copy of the original image
         lab_image = self.lab_image
-
-        # Get the height and width of the image
         height, width, _ = lab_image.shape
 
-        # Iterate over each pixel of the image
         for x in range(height):
             for y in range(width):
-                # Get the BGR values of the pixel
                 L,a,b = lab_image[x, y]
 
-                if lowerRange
+                check_L = lowerRange['L'] <= L <= upperRange['L']
+                check_a = lowerRange['a'] <= a <= upperRange['a']
+                check_b = lowerRange['b'] <= b <= upperRange['b']
+                if check_L:
+                    salmon_score[x,y] = current_score
+                else:
+                    continue
 
-                # Update the pixel values in the modified image
-                modified_image[x,y] = [l,a,b]
+    # TODO: Preguntar si este pedo esta bien
+    def threshold_algorithm(self):
+        img_original = self.original_image
+        salmon_score = self.salmon_score
+        umbral = 1  # Umbral de binarización
+        _, mascara = cv2.threshold(salmon_score, umbral, 255, cv2.THRESH_BINARY)
+        elementos_no_cero = np.count_nonzero(mascara)
+        print('numero de threshold: ', elementos_no_cero)
+        imagen_gris = cv2.cvtColor(img_original, cv2.COLOR_RGB2GRAY)
+
+        # Aplicar la máscara a la imagen original para resaltar los píxeles no categorizados
+        imagen_resaltada = cv2.bitwise_and(imagen_gris, mascara, mask=mascara)
+        plt.imshow(imagen_resaltada, cmap='gray')
+        plt.title('Imagen Umbralizada')
+        plt.axis('off')
+
+        plt.show()
+        self.print_statistics(imagen_gris, mascara)
+
+    # TODO: Preguntar si asi van a querer la entrega del proyecto
+    def print_statistics(self, imagen_gris, mascara):
+
+        # Mostrar ambas imágenes en una sola ventana
+        # plt.figure(figsize=(10,5))
+
+        plt.subplot(2, 1, 1)
+        plt.imshow(imagen_gris, cmap='gray')
+        plt.title('Imagen en Escala de Grises')
+        plt.axis('off')
+
+        plt.subplot(2, 1, 2)
+        plt.imshow(mascara, cmap='gray')
+        plt.title('Imagen Umbralizada')
+        plt.axis('off')
+
+        plt.show()
+
+        salmon_score = self.salmon_score
+        elementos = salmon_score.ravel()
+        elementos_sin_cero = elementos[elementos != 0]
+
+                # Definir los bins para el histograma (del 20 al 34)
+        bins = np.arange(20, 35)
+        bins2 = np.arange(20, 36)
+        # Calcular el histograma con bins predefinidos
+        histograma, _ = np.histogram(elementos_sin_cero, bins=bins2)
+
+        # Crear un array de valores del 20 al 34 para representar todos los posibles valores en el histograma
+        valores_posibles = np.arange(20, 35)
+
+        # Rellenar el histograma con ceros donde no hay valores en tus datos
+        histograma_completo = np.zeros_like(valores_posibles)
+        histograma_completo[np.isin(valores_posibles, bins)] = histograma
+
+        # Crear el histograma
+        plt.bar(valores_posibles, histograma_completo)
+
+        plt.title("Histograma de los salmon fan")
+        plt.show()
 
 
-        # mask = image[:].copy()
-        # # image = (image/256).astype('uint8')
-        # imageLab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
-        # imageRange = cv2.inRange(imageLab,lowerRange, upperRange)
-        # # cv2.imshow('prueba', imageLab)
 
-        # ones = cv2.countNonZero(imageRange)
-
-
-        # mask[:,:,0] = imageRange
-        # mask[:,:,1] = imageRange
-        # mask[:,:,2] = imageRange
-
-        # kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
-        # closing = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-        # faceLab = cv2.bitwise_and(image,mask)
-
-        # cv2.imshow("imagen salmon",faceLab )
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
-        # return faceLab
-
-lab_segmentation = LabSegmentation()
+#TODO: Hacer un for loop de las imagenes
+directorio_imagen = './datasets/original-dataset/train/wildstrain-226_jpg.rf.b424f591615e7f6e003580aeff95bb5e.jpg'
+lab_segmentation = LabSegmentation(directorio_imagen)
 lab_segmentation.img_to_lab()
 lab_segmentation.get_ranges()
+lab_segmentation.threshold_algorithm()
