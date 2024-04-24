@@ -199,7 +199,7 @@ class LabSegmentation():
                 check_L = lowerRange['L'] <= L <= upperRange['L']
                 check_a = lowerRange['a'] <= a <= upperRange['a']
                 check_b = lowerRange['b'] <= b <= upperRange['b']
-                if check_L:
+                if check_L :
                     salmon_score[x,y] = current_score
                 else:
                     continue
@@ -216,11 +216,11 @@ class LabSegmentation():
 
         # Aplicar la máscara a la imagen original para resaltar los píxeles no categorizados
         imagen_resaltada = cv2.bitwise_and(imagen_gris, mascara, mask=mascara)
-        plt.imshow(imagen_resaltada, cmap='gray')
-        plt.title('Imagen Umbralizada')
-        plt.axis('off')
+        # plt.imshow(imagen_resaltada, cmap='gray')
+        # plt.title('Imagen Umbralizada')
+        # plt.axis('off')
 
-        plt.show()
+        # plt.show()
         self.print_statistics(imagen_gris, mascara)
 
     # TODO: Preguntar si asi van a querer la entrega del proyecto
@@ -258,16 +258,20 @@ class LabSegmentation():
         histograma_completo = np.zeros_like(valores_posibles)
         histograma_completo[np.isin(valores_posibles, bins)] = histograma
 
+        histograma_completo = histograma_completo / 1e4
+
         # Crear el histograma
         plt.bar(valores_posibles, histograma_completo)
-
+        plt.xlabel("SalmonFan Score")
+        plt.ylabel("Pixels x 10^4")
         plt.title("Histograma de los salmon fan")
         plt.show()
 
 
 
 #TODO: Hacer un for loop de las imagenes
-directorio_imagen = './datasets/original-dataset/train/wildstrain-226_jpg.rf.b424f591615e7f6e003580aeff95bb5e.jpg'
+# directorio_imagen = './datasets/original-dataset/train/wildstrain-226_jpg.rf.b424f591615e7f6e003580aeff95bb5e.jpg'
+directorio_imagen = './datasets/modified-dataset/test/imagen_Prueba.jpg'
 lab_segmentation = LabSegmentation(directorio_imagen)
 lab_segmentation.img_to_lab()
 lab_segmentation.get_ranges()
