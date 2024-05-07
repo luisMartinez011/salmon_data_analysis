@@ -54,21 +54,32 @@ class LabSegmentation():
         '33': [0.40, 1.00, 1.60],
         '34': [0.50, 1.40, 2.00],
     }
+
+    output_dir = {
+        'histogramas': './datasets/modified-dataset/histogramas/',
+        'imagenes': './datasets/modified-dataset/imagenes/',
+        'matrices': './datasets/modified-dataset/matrices/',
+        'imagenes_grises': './datasets/modified-dataset/imagenes_grises/',
+    }
+
+    #* Atributos
+    # ?Imagen convertida a formato lab
+    # lab_image
+
+    #file_name
+
+    # ?Es la imagen original sin editar
+    #original_image
+
     def  __init__(self,imagen_path):
         self.original_image = self.get_image(imagen_path)
+        self.file_name = os.path.splitext(os.path.basename(imagen_path))[0]
 
 
     #Revisar pq la imagen me sale en azul
     def get_image(self,imagen_path):
         img_original = cv2.imread(imagen_path)
         imagen_rgb = cv2.cvtColor(img_original, cv2.COLOR_RGB2BGR)
-        # cv2.imshow('Imagen Original', imagen_rgb)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
-
-        # plt.imshow(imagen_rgb)
-        # plt.title('Displaying image using Matplotlib')
-        # plt.show()
         return imagen_rgb
 
     def get_ranges(self):
@@ -200,6 +211,7 @@ class LabSegmentation():
                 check_a = lowerRange['a'] <= a <= upperRange['a']
                 check_b = lowerRange['b'] <= b <= upperRange['b']
                 if check_L :
+                    #Todo: revisar si salmon_score si cambia
                     salmon_score[x,y] = current_score
                 else:
                     continue
@@ -221,13 +233,28 @@ class LabSegmentation():
         # plt.axis('off')
 
         # plt.show()
-        self.print_statistics(imagen_gris, mascara)
+        return (imagen_gris, mascara)
 
     # TODO: Preguntar si asi van a querer la entrega del proyecto
-    def print_statistics(self, imagen_gris, mascara):
+    def save_statistics(self, imagen_gris, mascara):
+        self.save_plots(imagen_gris, mascara)
+        self.save_matrix()
 
-        # Mostrar ambas imágenes en una sola ventana
-        # plt.figure(figsize=(10,5))
+    def save_matrix(self):
+        lab_image = self.lab_image
+        file_name = self.file_name
+        folder_name = self.output_dir['matrices']
+        path = os.path.join(folder_name, file_name)
+        path = path + ".txt"
+
+        row, col, _ = lab_image.shape
+        matrix_2d = lab_image.reshape(row* col, 3)
+        np.savetxt(path, matrix_2d, fmt="%d")
+
+
+    def save_plots(self, imagen_gris, mascara):
+
+
 
         plt.subplot(2, 1, 1)
         plt.imshow(imagen_gris, cmap='gray')
@@ -239,7 +266,14 @@ class LabSegmentation():
         plt.title('Imagen Umbralizada')
         plt.axis('off')
 
-        plt.show()
+        # plt.show()
+        #* Guarda las dos imagenes
+        file_name = self.file_name
+        folder_name = self.output_dir['imagenes_grises']
+        path = os.path.join(folder_name, file_name)
+        path = path + ".png"
+        plt.savefig(path)
+
 
         salmon_score = self.salmon_score
         elementos = salmon_score.ravel()
@@ -265,14 +299,26 @@ class LabSegmentation():
         plt.xlabel("SalmonFan Score")
         plt.ylabel("Pixels x 10^4")
         plt.title("Histograma de los salmon fan")
-        plt.show()
+        # plt.show()
 
+        #* Guarda el histograma
+        file_name = self.file_name
+        folder_name = self.output_dir['histogramas']
+        path = os.path.join(folder_name, file_name)
+        path = path + ".png"
+        plt.savefig(path)
 
 
 #TODO: Hacer un for loop de las imagenes
+directorio_imagenes = './datasets/original-dataset/test/'
+
+for file_name in os.listdir(directorio_imagenes):
+    if file_name.endswith(".jpg"):
+
+        ruta_imagen = os.path.join(directorio_imagenes, file_name)
 # directorio_imagen = './datasets/original-dataset/train/wildstrain-226_jpg.rf.b424f591615e7f6e003580aeff95bb5e.jpg'
-directorio_imagen = './datasets/modified-dataset/test/imagen_Prueba.jpg'
-lab_segmentation = LabSegmentation(directorio_imagen)
-lab_segmentation.img_to_lab()
-lab_segmentation.get_ranges()
-lab_segmentation.threshold_algorithm()
+        lab_segmentation = LabSegmentation(ruta_imagen)
+        lab_segmentation.img_to_lab()
+        lab_segmentation.get_ranges()
+        (imagen_gris, mascara) = lab_segmentation.threshold_algorithm()
+        lab_segmentation.save_statistics(imagen_gris, mascara)

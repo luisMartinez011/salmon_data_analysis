@@ -2,9 +2,9 @@ import os
 import cv2
 import numpy as np
 
+#* Tomar este programa como referencia para cortar las imagenes
 directorio_imagenes = './datasets/original-dataset/test'
-directorio_imagenes_modificadas = './datasets/modified-dataset/test'
-
+directorio_imagenes_modificadas = './datasets/modified-dataset/imagenes-recortadas'
 # Definir el rango de color salmón en HSV
 lower_salmon = np.array([0, 100, 100])
 upper_salmon = np.array([30, 255, 255])
