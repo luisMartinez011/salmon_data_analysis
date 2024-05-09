@@ -71,17 +71,23 @@ class LabSegmentation():
     # ?Es la imagen original sin editar
     #original_image
 
+    # ?Matriz con los score de los pixeles de acuerdo al salmonfan
+    # salmon_score
+
     def  __init__(self,imagen_path):
         self.original_image = self.get_image(imagen_path)
         self.file_name = os.path.splitext(os.path.basename(imagen_path))[0]
 
 
-    #Revisar pq la imagen me sale en azul
+    #* Obtiene la imagen en rgb
     def get_image(self,imagen_path):
         img_original = cv2.imread(imagen_path)
         imagen_rgb = cv2.cvtColor(img_original, cv2.COLOR_RGB2BGR)
         return imagen_rgb
 
+    #* Obtiene los rangos del salmon fan card,
+    #* Y los envia a una funcion donde se encarga de asignar
+    #* cada pixel con su respectivo rango
     def get_ranges(self):
         lab_ranges = self.lab_ranges
         #Pixeles clasificados a que SalmonFan pertencen
@@ -198,6 +204,7 @@ class LabSegmentation():
         Lab_OpenCV = [L, a, b];
         return Lab_OpenCV
 
+    #
     def compare_salmonfan(self, lowerRange, upperRange, current_score, salmon_score):
 
         lab_image = self.lab_image
@@ -210,13 +217,16 @@ class LabSegmentation():
                 check_L = lowerRange['L'] <= L <= upperRange['L']
                 check_a = lowerRange['a'] <= a <= upperRange['a']
                 check_b = lowerRange['b'] <= b <= upperRange['b']
-                if check_L :
+                if check_L and check_a or check_b :
                     #Todo: revisar si salmon_score si cambia
                     salmon_score[x,y] = current_score
                 else:
                     continue
 
     # TODO: Preguntar si este pedo esta bien
+    #*Aplica el umbral binario donde
+    # * los pixeles negros, son lo que corresponde al salmon
+    # * Y los pixeles blancos son lo que NO corresponde
     def threshold_algorithm(self):
         img_original = self.original_image
         salmon_score = self.salmon_score
@@ -227,7 +237,7 @@ class LabSegmentation():
         imagen_gris = cv2.cvtColor(img_original, cv2.COLOR_RGB2GRAY)
 
         # Aplicar la máscara a la imagen original para resaltar los píxeles no categorizados
-        imagen_resaltada = cv2.bitwise_and(imagen_gris, mascara, mask=mascara)
+        # imagen_resaltada = cv2.bitwise_and(imagen_gris, mascara, mask=mascara)
         # plt.imshow(imagen_resaltada, cmap='gray')
         # plt.title('Imagen Umbralizada')
         # plt.axis('off')
@@ -254,8 +264,6 @@ class LabSegmentation():
 
     def save_plots(self, imagen_gris, mascara):
 
-
-
         plt.subplot(2, 1, 1)
         plt.imshow(imagen_gris, cmap='gray')
         plt.title('Imagen en Escala de Grises')
@@ -266,7 +274,6 @@ class LabSegmentation():
         plt.title('Imagen Umbralizada')
         plt.axis('off')
 
-        # plt.show()
         #* Guarda las dos imagenes
         file_name = self.file_name
         folder_name = self.output_dir['imagenes_grises']
@@ -279,7 +286,7 @@ class LabSegmentation():
         elementos = salmon_score.ravel()
         elementos_sin_cero = elementos[elementos != 0]
 
-                # Definir los bins para el histograma (del 20 al 34)
+        # Definir los bins para el histograma (del 20 al 34)
         bins = np.arange(20, 35)
         bins2 = np.arange(20, 36)
         # Calcular el histograma con bins predefinidos
@@ -309,16 +316,3 @@ class LabSegmentation():
         plt.savefig(path)
 
 
-#TODO: Hacer un for loop de las imagenes
-directorio_imagenes = './datasets/original-dataset/test/'
-
-for file_name in os.listdir(directorio_imagenes):
-    if file_name.endswith(".jpg"):
-
-        ruta_imagen = os.path.join(directorio_imagenes, file_name)
-# directorio_imagen = './datasets/original-dataset/train/wildstrain-226_jpg.rf.b424f591615e7f6e003580aeff95bb5e.jpg'
-        lab_segmentation = LabSegmentation(ruta_imagen)
-        lab_segmentation.img_to_lab()
-        lab_segmentation.get_ranges()
-        (imagen_gris, mascara) = lab_segmentation.threshold_algorithm()
-        lab_segmentation.save_statistics(imagen_gris, mascara)
