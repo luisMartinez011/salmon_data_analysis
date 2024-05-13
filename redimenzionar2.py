@@ -2,7 +2,8 @@ import os
 import cv2
 import numpy as np
 
-#* Tomar este programa como referencia para cortar las imagenes
+# Tomar este programa como referencia para cortar las imagenes
+
 directorio_imagenes = './datasets/original-dataset/test'
 directorio_imagenes_modificadas = './datasets/modified-dataset/imagenes-recortadas'
 # Definir el rango de color salmón en HSV
@@ -30,41 +31,38 @@ for nombre_archivo in os.listdir(directorio_imagenes):
         hsv = cv2.cvtColor(imagen, cv2.COLOR_BGR2HSV)
 
         # Umbralizar la imagen HSV para obtener solo los colores de acuerdo al umbral del color del salmón
-        mask = cv2.inRange(hsv, lower_salmon, upper_salmon)
+        mask_salmon = cv2.inRange(hsv, lower_salmon, upper_salmon)
 
-        # Aplicar operaciones morfológicas para reducir el ruido en la máscara
-        kernel = np.ones((5, 5), np.uint8)
-        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+        # Encontrar los contornos en la máscara
+        contours, _ = cv2.findContours(mask_salmon, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-        # Encontrar los límites de la región blanca en la máscara
-        indices = np.where(mask == 255)
-        y_min, y_max = np.min(indices[0]), np.max(indices[0])
-        x_min, x_max = np.min(indices[1]), np.max(indices[1])
+        # Encontrar el contorno más grande (el contorno del salmón)
+        if contours:
+            contour_salmon = max(contours, key=cv2.contourArea)
 
-        # Calcular los desplazamientos necesarios para centrar la región recortada
-        centro_x = (x_min + x_max) // 2
-        centro_y = (y_min + y_max) // 2
-        dx = max(0, porcion_w // 2 - centro_x)
-        dy = max(0, porcion_h // 2 - centro_y)
+            # Obtener las coordenadas del rectángulo delimitador del contorno del salmón
+            x, y, w, h = cv2.boundingRect(contour_salmon)
 
-        # Calcular las nuevas coordenadas para la región recortada
-        nuevo_x_min = max(0, x_min - dx)
-        nuevo_y_min = max(0, y_min - dy)
-        nuevo_x_max = min(imagen.shape[1], x_max + (porcion_w - (x_max - x_min)) // 2)
-        nuevo_y_max = min(imagen.shape[0], y_max + (porcion_h - (y_max - y_min)) // 2)
+            # Redimensionar el rectángulo delimitador para que abarque toda la imagen del salmón
+            x = max(0, x - (porcion_w - w) // 2)
+            y = max(0, y - (porcion_h - h) // 2)
+            w = min(imagen.shape[1] - x, porcion_w)
+            h = min(imagen.shape[0] - y, porcion_h)
 
-        # Recortar la porción de la imagen umbralizada
-        imagen_recortada = recortar_roi(imagen, nuevo_x_min, nuevo_y_min, nuevo_x_max - nuevo_x_min,
-                                        nuevo_y_max - nuevo_y_min)
+            # Recortar la porción de la imagen original
+            imagen_recortada = recortar_roi(imagen, x, y, w, h)
 
-        # Redimensionar la imagen recortada a las dimensiones deseadas
-        imagen_recortada = cv2.resize(imagen_recortada, (porcion_w, porcion_h))
+            # Mostrar la imagen recortada
+            cv2.imshow('Imagen Recortada', imagen_recortada)
+            cv2.waitKey(0)
 
-        # Mostrar la imagen recortada
-        cv2.imshow('Imagen Recortada', imagen_recortada)
-        cv2.waitKey(0)
-
-        # Guardar la imagen recortada
-        cv2.imwrite(os.path.join(directorio_imagenes_modificadas, nombre_archivo), imagen_recortada)
+            # Guardar la imagen recortada
+            cv2.imwrite(os.path.join(directorio_imagenes_modificadas, nombre_archivo), imagen_recortada)
 
 print("Proceso completado.")
+
+
+
+
+
+
