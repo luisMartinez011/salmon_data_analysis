@@ -217,7 +217,7 @@ class LabSegmentation():
                 check_L = lowerRange['L'] <= L <= upperRange['L']
                 check_a = lowerRange['a'] <= a <= upperRange['a']
                 check_b = lowerRange['b'] <= b <= upperRange['b']
-                if check_L and check_a or check_b :
+                if check_L and check_a and check_b :
                     #Todo: revisar si salmon_score si cambia
                     salmon_score[x,y] = current_score
                 else:

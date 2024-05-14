@@ -37,12 +37,14 @@ for file_name in os.listdir(directorio_imagenes):
 
         # Recortar la región del salmón de la imagen original
         region_salmon = imagen[y:y+h, x:x+w]
+        imagren2 = cv2.drawContours(imagen, contornos, -1, (0, 255, 0), 2)
 
         # Redimensionar la región del salmón al tamaño deseado (299x86 píxeles)
         region_salmon_redimensionada = cv2.resize(region_salmon, (299, 86))
 
         # Mostrar la imagen original y la región del salmón redimensionada
         cv2.imshow('Imagen Original', imagen)
+        cv2.imshow('Imagen Origina22', imagren2)
         cv2.imshow('Imagen mascara', mascara)
         cv2.imshow('Región del Salmón', region_salmon_redimensionada)
         cv2.waitKey(0)
