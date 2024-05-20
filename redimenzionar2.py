@@ -5,7 +5,7 @@ import numpy as np
 # Tomar este programa como referencia para cortar las imagenes
 
 directorio_imagenes = './datasets/original-dataset/test'
-directorio_imagenes_modificadas = './datasets/modified-dataset/imagenes-recortadas'
+directorio_imagenes_modificadas = './datasets/modified-dataset/imagenes-precortadas'
 # Definir el rango de color salmón en HSV
 lower_salmon = np.array([0, 100, 100])
 upper_salmon = np.array([30, 255, 255])
@@ -24,8 +24,8 @@ for nombre_archivo in os.listdir(directorio_imagenes):
     if nombre_archivo.endswith(".jpg"):
         ruta_imagen = os.path.join(directorio_imagenes, nombre_archivo)
         imagen = cv2.imread(ruta_imagen)
-        cv2.imshow('Imagen Original', imagen)
-        cv2.waitKey(0)
+        # cv2.imshow('Imagen Original', imagen)
+        # cv2.waitKey(0)
 
         # Convertir RGB a HSV
         hsv = cv2.cvtColor(imagen, cv2.COLOR_BGR2HSV)
@@ -53,8 +53,8 @@ for nombre_archivo in os.listdir(directorio_imagenes):
             imagen_recortada = recortar_roi(imagen, x, y, w, h)
 
             # Mostrar la imagen recortada
-            cv2.imshow('Imagen Recortada', imagen_recortada)
-            cv2.waitKey(0)
+            # cv2.imshow('Imagen Recortada', imagen_recortada)
+            # cv2.waitKey(0)
 
             # Guardar la imagen recortada
             cv2.imwrite(os.path.join(directorio_imagenes_modificadas, nombre_archivo), imagen_recortada)

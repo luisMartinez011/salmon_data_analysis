@@ -217,7 +217,7 @@ class LabSegmentation():
                 check_L = lowerRange['L'] <= L <= upperRange['L']
                 check_a = lowerRange['a'] <= a <= upperRange['a']
                 check_b = lowerRange['b'] <= b <= upperRange['b']
-                if check_L and check_a and check_b :
+                if check_L :
                     #Todo: revisar si salmon_score si cambia
                     salmon_score[x,y] = current_score
                 else:
@@ -306,7 +306,7 @@ class LabSegmentation():
         plt.xlabel("SalmonFan Score")
         plt.ylabel("Pixels x 10^4")
         plt.title("Histograma de los salmon fan")
-        # plt.show()
+        plt.show()
 
         #* Guarda el histograma
         file_name = self.file_name
