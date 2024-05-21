@@ -269,7 +269,7 @@ class LabSegmentation():
         plt.imshow(mascara, cmap='gray')
         plt.title('Imagen Umbralizada')
         plt.axis('off')
-        plt.show()
+        # plt.show()
 
         #* Guarda las dos imagenes
         file_name = self.file_name
@@ -277,7 +277,7 @@ class LabSegmentation():
         path = os.path.join(folder_name, file_name)
         path = path + ".png"
         plt.savefig(path)
-
+        plt.close()
 
         salmon_score = self.salmon_score
         elementos = salmon_score.ravel()
@@ -303,7 +303,7 @@ class LabSegmentation():
         plt.xlabel("SalmonFan Score")
         plt.ylabel("Pixels x 10^4")
         plt.title("Histograma de los salmon fan")
-        plt.show()
+        # plt.show()
 
         #* Guarda el histograma
         file_name = self.file_name
@@ -311,5 +311,6 @@ class LabSegmentation():
         path = os.path.join(folder_name, file_name)
         path = path + ".png"
         plt.savefig(path)
+        plt.close()
 
 
