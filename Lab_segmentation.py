@@ -57,9 +57,9 @@ class LabSegmentation():
 
     output_dir = {
         'histogramas': './datasets/modified-dataset/histogramas/',
-        'imagenes': './datasets/modified-dataset/imagenes/',
+        # 'imagenes': './datasets/modified-dataset/imagenes/',
         'matrices': './datasets/modified-dataset/matrices/',
-        'imagenes_grises': './datasets/modified-dataset/imagenes_grises/',
+        'imagenes_umbralizadas': './datasets/modified-dataset/imagenes_umbralizadas/',
     }
 
     #* Atributos
@@ -146,9 +146,6 @@ class LabSegmentation():
                 # Get the BGR values of the pixel
                 R,G,B = original_image[x, y]
                 l,a,b = self.rgb_to_lab(R,G,B)
-                # TODO: Hacer pruebas con este
-                # if 44 < l < 72:
-                #     print('gratula: ', l)
 
                 modified_image[x,y] = [l,a,b]
         self.lab_image = modified_image
@@ -204,7 +201,7 @@ class LabSegmentation():
         Lab_OpenCV = [L, a, b];
         return Lab_OpenCV
 
-    #
+
     def compare_salmonfan(self, lowerRange, upperRange, current_score, salmon_score):
 
         lab_image = self.lab_image
@@ -218,7 +215,6 @@ class LabSegmentation():
                 check_a = lowerRange['a'] <= a <= upperRange['a']
                 check_b = lowerRange['b'] <= b <= upperRange['b']
                 if check_L :
-                    #Todo: revisar si salmon_score si cambia
                     salmon_score[x,y] = current_score
                 else:
                     continue
@@ -276,7 +272,7 @@ class LabSegmentation():
 
         #* Guarda las dos imagenes
         file_name = self.file_name
-        folder_name = self.output_dir['imagenes_grises']
+        folder_name = self.output_dir['imagenes_umbralizadas']
         path = os.path.join(folder_name, file_name)
         path = path + ".png"
         plt.savefig(path)
