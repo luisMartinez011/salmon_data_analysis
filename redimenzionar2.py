@@ -4,7 +4,7 @@ import numpy as np
 
 # Tomar este programa como referencia para cortar las imagenes
 
-directorio_imagenes = './datasets/original-dataset/test'
+directorio_imagenes = './datasets/original-dataset'
 directorio_imagenes_modificadas = './datasets/modified-dataset/imagenes-precortadas'
 # Definir el rango de color salmón en HSV
 lower_salmon = np.array([0, 100, 100])

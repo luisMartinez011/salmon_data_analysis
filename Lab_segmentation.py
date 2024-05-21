@@ -214,7 +214,7 @@ class LabSegmentation():
                 check_L = lowerRange['L'] <= L <= upperRange['L']
                 check_a = lowerRange['a'] <= a <= upperRange['a']
                 check_b = lowerRange['b'] <= b <= upperRange['b']
-                if check_L :
+                if check_L or( check_a or check_b):
                     salmon_score[x,y] = current_score
                 else:
                     continue
@@ -269,6 +269,7 @@ class LabSegmentation():
         plt.imshow(mascara, cmap='gray')
         plt.title('Imagen Umbralizada')
         plt.axis('off')
+        plt.show()
 
         #* Guarda las dos imagenes
         file_name = self.file_name
