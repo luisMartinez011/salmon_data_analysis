@@ -1,7 +1,7 @@
 from Lab_segmentation import LabSegmentation
 import os
 #TODO: Hacer un for loop de las imagenes
-directorio_imagenes = './datasets/modified-dataset/imagenes-precortadas/'
+directorio_imagenes = './datasets/modified-dataset/imagenes-cortadas/'
 
 for file_name in os.listdir(directorio_imagenes):
     if file_name.endswith(".jpg"):

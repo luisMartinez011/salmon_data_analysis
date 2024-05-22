@@ -214,7 +214,7 @@ class LabSegmentation():
                 check_L = lowerRange['L'] <= L <= upperRange['L']
                 check_a = lowerRange['a'] <= a <= upperRange['a']
                 check_b = lowerRange['b'] <= b <= upperRange['b']
-                if check_L or( check_a or check_b):
+                if check_L and  check_a or (check_b):
                     salmon_score[x,y] = current_score
                 else:
                     continue
@@ -254,8 +254,27 @@ class LabSegmentation():
         path = path + ".txt"
 
         row, col, _ = lab_image.shape
-        matrix_2d = lab_image.reshape(row* col, 3)
-        np.savetxt(path, matrix_2d, fmt="%d")
+
+        # Crear o abrir un archivo de texto para escribir
+        with open(path, 'w') as archivo:
+            # Recorrer cada fila de la imagen
+            for i in range(row):
+                # Obtener los valores de los píxeles de la fila actual
+                fila = lab_image[i, :, :]
+
+                # Convertir la fila en una lista de strings para poder unirlos
+                fila_str = []
+                for j in range(col):
+                    # Obtener los valores L, A, B de cada píxel
+                    l, a, b = fila[j]
+                    fila_str.append(f"[{l},{a},{b}]")
+
+                # Unir todos los valores de la fila en una sola línea
+                fila_str = ' '.join(fila_str)
+
+                # Escribir la línea en el archivo
+                archivo.write(fila_str + '\n')
+    # np.savetxt(path, matrix_2d, fmt="%d")
 
 
     def save_plots(self, imagen_gris, mascara):
@@ -269,7 +288,7 @@ class LabSegmentation():
         plt.imshow(mascara, cmap='gray')
         plt.title('Imagen Umbralizada')
         plt.axis('off')
-        # plt.show()
+        plt.show()
 
         #* Guarda las dos imagenes
         file_name = self.file_name
@@ -303,7 +322,7 @@ class LabSegmentation():
         plt.xlabel("SalmonFan Score")
         plt.ylabel("Pixels x 10^4")
         plt.title("Histograma de los salmon fan")
-        # plt.show()
+        plt.show()
 
         #* Guarda el histograma
         file_name = self.file_name
