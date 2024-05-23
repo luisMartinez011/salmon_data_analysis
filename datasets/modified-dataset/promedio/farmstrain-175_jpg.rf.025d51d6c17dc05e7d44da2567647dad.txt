@@ -1,0 +1,1 @@
+Promedio del nivel del color del salmon: 23.003253277198354

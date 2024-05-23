@@ -60,6 +60,7 @@ class LabSegmentation():
         # 'imagenes': './datasets/modified-dataset/imagenes/',
         'matrices': './datasets/modified-dataset/matrices/',
         'imagenes_umbralizadas': './datasets/modified-dataset/imagenes_umbralizadas/',
+        'promedio': './datasets/modified-dataset/promedio/'
     }
 
     #* Atributos
@@ -156,47 +157,44 @@ class LabSegmentation():
     # (green to red) and b* (blue to yellow) are two chromatic
     # components, with values varying from −120 to +120
     def rgb_to_lab(self, r,g,b):
-        def func(t):
-            if (t > 0.008856):
-                return np.power(t, 1/3.0);
-            else:
-                return 7.787 * t + 16 / 116.0;
+
 
         #Conversion Matrix
-        matrix = [[0.412453, 0.357580, 0.180423],
-                [0.212671, 0.715160, 0.072169],
-                [0.019334, 0.119193, 0.950227]]
+        matrix = [[0.2186, 0.1316, -0.0211, -0.0005, 0.0012, 0.0002, -0.0005,0.0002, -0.0007, 15.527],
+                [0.335, -0.5012, 0.1551, 0.0001, 0.0003, 0.001, 0.0011, -0.001, -0.001, -0.393],
+                [0.093, 0.435, -0.0538, -0.0001, 0.0005, -0.0007, 0.0001, 0.0003, -0.0018, -4.4257]]
 
         # RGB values lie between 0 to 1.0
-        r = r / 255.0
-        g = g / 255.0
-        b = b / 255.0
-        rgb = [r, g, b] # RGB
+        r = r
+        g = g
+        b = b
+        rgb = [
+            r,
+            g,
+            b,
+            r * g,
+            r * b,
+            g * b,
+            np.square(r),
+            np.square(g),
+            np.square(b),
+            1
+            ] # RGB
 
         cie = np.dot(matrix, rgb);
 
-        cie[0] = cie[0] /0.950456;
-        cie[2] = cie[2] /1.088754;
 
-        # Calculate the L
-        L = 116 * np.power(cie[1], 1/3.0) - 16.0 if cie[1] > 0.008856 else 903.3 * cie[1];
-
-        # Calculate the a
-        a_original = 500*(func(cie[0]) - func(cie[1]));
-
-        # Calculate the b
-        b_original = 200*(func(cie[1]) - func(cie[2]));
-
-        #  Values lie between -128 < b <= 127, -128 < a <= 127, 0 <= L <= 100
-        # Lab = [L, a, b];
-
+        #  ! Values lie between -128 < b <= 127, -128 < a <= 127, 0 <= L <= 100
         # Definir los rangos original y nuevo
         rango_original = (-128, 127)
         rango_nuevo = (-120, 120)
 
         # Aplicar la transformación lineal utilizando np.interp
-        a = np.interp(a_original, rango_original, rango_nuevo)
-        b = np.interp(b_original, rango_original, rango_nuevo)
+        L = cie[0]
+        # a = np.interp(cie[1], rango_original, rango_nuevo)
+        # b = np.interp(cie[2], rango_original, rango_nuevo)
+        a = cie[1]
+        b = cie[2]
 
         Lab_OpenCV = [L, a, b];
         return Lab_OpenCV
@@ -214,7 +212,7 @@ class LabSegmentation():
                 check_L = lowerRange['L'] <= L <= upperRange['L']
                 check_a = lowerRange['a'] <= a <= upperRange['a']
                 check_b = lowerRange['b'] <= b <= upperRange['b']
-                if check_L and  check_a or (check_b):
+                if check_L or check_a or check_b:
                     salmon_score[x,y] = current_score
                 else:
                     continue
@@ -232,19 +230,13 @@ class LabSegmentation():
         print('numero de threshold: ', elementos_no_cero)
         imagen_gris = cv2.cvtColor(img_original, cv2.COLOR_RGB2GRAY)
 
-        # Aplicar la máscara a la imagen original para resaltar los píxeles no categorizados
-        # imagen_resaltada = cv2.bitwise_and(imagen_gris, mascara, mask=mascara)
-        # plt.imshow(imagen_resaltada, cmap='gray')
-        # plt.title('Imagen Umbralizada')
-        # plt.axis('off')
-
-        # plt.show()
         return (imagen_gris, mascara)
 
     # TODO: Preguntar si asi van a querer la entrega del proyecto
     def save_statistics(self, imagen_gris, mascara):
         self.save_plots(imagen_gris, mascara)
         self.save_matrix()
+        self.save_mean_score()
 
     def save_matrix(self):
         lab_image = self.lab_image
@@ -288,7 +280,7 @@ class LabSegmentation():
         plt.imshow(mascara, cmap='gray')
         plt.title('Imagen Umbralizada')
         plt.axis('off')
-        # plt.show()
+        plt.show()
 
         #* Guarda las dos imagenes
         file_name = self.file_name
@@ -322,7 +314,7 @@ class LabSegmentation():
         plt.xlabel("SalmonFan Score")
         plt.ylabel("Pixels x 10^4")
         plt.title("Histograma de los salmon fan")
-        # plt.show()
+        plt.show()
 
         #* Guarda el histograma
         file_name = self.file_name
@@ -331,5 +323,19 @@ class LabSegmentation():
         path = path + ".png"
         plt.savefig(path)
         plt.close()
+
+    def save_mean_score(self):
+        salmon_score = self.salmon_score
+        elementos = salmon_score.ravel()
+        elementos_sin_cero = elementos[elementos != 0]
+        mean_fillet_score = "Promedio del nivel del color del salmon: " + str(np.mean(elementos_sin_cero))
+
+        file_name = self.file_name
+        folder_name = self.output_dir['promedio']
+        path = os.path.join(folder_name, file_name)
+        path = path + ".txt"
+
+        np.savetxt(path, [mean_fillet_score], fmt='%s')
+
 
 
