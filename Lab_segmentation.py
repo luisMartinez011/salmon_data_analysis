@@ -61,8 +61,10 @@ class LabSegmentation():
         'matrices_lab': './datasets/modified-dataset/matrices_lab/',
         'matrices_rgb': './datasets/modified-dataset/matrices_rgb/',
         'matrices_salmon_score': './datasets/modified-dataset/matrices_salmon_score/',
+        'matrices_gray': './datasets/modified-dataset/matrices_gray/',
+        'matrices_umbralizado': './datasets/modified-dataset/matrices_umbralizado/',
         'imagenes_umbralizadas': './datasets/modified-dataset/imagenes_umbralizadas/',
-        'promedio': './datasets/modified-dataset/promedio/'
+        'promedio': './datasets/modified-dataset/promedio/',
     }
 
     #* Atributos
@@ -187,14 +189,8 @@ class LabSegmentation():
 
 
         #  ! Values lie between -128 < b <= 127, -128 < a <= 127, 0 <= L <= 100
-        # Definir los rangos original y nuevo
-        rango_original = (-128, 127)
-        rango_nuevo = (-120, 120)
 
-        # Aplicar la transformación lineal utilizando np.interp
         L = cie[0]
-        # a = np.interp(cie[1], rango_original, rango_nuevo)
-        # b = np.interp(cie[2], rango_original, rango_nuevo)
         a = cie[1]
         b = cie[2]
 
@@ -239,6 +235,8 @@ class LabSegmentation():
         self.save_matrix_rgb()
         self.save_matrix_salmon_score()
         self.save_mean_score()
+        self.save_matrix_gray(imagen_gris)
+        self.save_matrix_umbralizado(mascara)
 
     def save_matrix_lab(self):
         lab_image = self.lab_image
@@ -291,6 +289,58 @@ class LabSegmentation():
                     # Obtener los valores L, A, B de cada píxel
                     l, a, b = fila[j]
                     fila_str.append(f"[{l},{a},{b}]")
+
+                # Unir todos los valores de la fila en una sola línea
+                fila_str = ' '.join(fila_str)
+
+                # Escribir la línea en el archivo
+                archivo.write(fila_str + '\n')
+
+    def save_matrix_gray(self, imagen_gris):
+        file_name = self.file_name
+        folder_name = self.output_dir['matrices_gray']
+        path = os.path.join(folder_name, file_name)
+        path = path + ".txt"
+
+        row, col = imagen_gris.shape
+
+        # Crear o abrir un archivo de texto para escribir
+        with open(path, 'w') as archivo:
+            # Recorrer cada fila de la imagen
+            for i in range(row):
+
+                # Convertir la fila en una lista de strings para poder unirlos
+                fila_str = []
+                for j in range(col):
+                    # Obtener los valores L, A, B de cada píxel
+                    current_score = imagen_gris[i, j]
+                    fila_str.append(f"{current_score}, ")
+
+                # Unir todos los valores de la fila en una sola línea
+                fila_str = ' '.join(fila_str)
+
+                # Escribir la línea en el archivo
+                archivo.write(fila_str + '\n')
+
+    def save_matrix_umbralizado(self, mascara):
+        file_name = self.file_name
+        folder_name = self.output_dir['matrices_umbralizado']
+        path = os.path.join(folder_name, file_name)
+        path = path + ".txt"
+
+        row, col = mascara.shape
+
+        # Crear o abrir un archivo de texto para escribir
+        with open(path, 'w') as archivo:
+            # Recorrer cada fila de la imagen
+            for i in range(row):
+
+                # Convertir la fila en una lista de strings para poder unirlos
+                fila_str = []
+                for j in range(col):
+                    # Obtener los valores L, A, B de cada píxel
+                    current_score = mascara[i, j]
+                    fila_str.append(f"{current_score}, ")
 
                 # Unir todos los valores de la fila en una sola línea
                 fila_str = ' '.join(fila_str)
