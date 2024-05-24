@@ -58,7 +58,9 @@ class LabSegmentation():
     output_dir = {
         'histogramas': './datasets/modified-dataset/histogramas/',
         # 'imagenes': './datasets/modified-dataset/imagenes/',
-        'matrices': './datasets/modified-dataset/matrices/',
+        'matrices_lab': './datasets/modified-dataset/matrices_lab/',
+        'matrices_rgb': './datasets/modified-dataset/matrices_rgb/',
+        'matrices_salmon_score': './datasets/modified-dataset/matrices_salmon_score/',
         'imagenes_umbralizadas': './datasets/modified-dataset/imagenes_umbralizadas/',
         'promedio': './datasets/modified-dataset/promedio/'
     }
@@ -217,7 +219,6 @@ class LabSegmentation():
                 else:
                     continue
 
-    # TODO: Preguntar si este pedo esta bien
     #*Aplica el umbral binario donde
     # * los pixeles negros, son lo que corresponde al salmon
     # * Y los pixeles blancos son lo que NO corresponde
@@ -232,16 +233,17 @@ class LabSegmentation():
 
         return (imagen_gris, mascara)
 
-    # TODO: Preguntar si asi van a querer la entrega del proyecto
     def save_statistics(self, imagen_gris, mascara):
         self.save_plots(imagen_gris, mascara)
-        self.save_matrix()
+        self.save_matrix_lab()
+        self.save_matrix_rgb()
+        self.save_matrix_salmon_score()
         self.save_mean_score()
 
-    def save_matrix(self):
+    def save_matrix_lab(self):
         lab_image = self.lab_image
         file_name = self.file_name
-        folder_name = self.output_dir['matrices']
+        folder_name = self.output_dir['matrices_lab']
         path = os.path.join(folder_name, file_name)
         path = path + ".txt"
 
@@ -266,8 +268,62 @@ class LabSegmentation():
 
                 # Escribir la línea en el archivo
                 archivo.write(fila_str + '\n')
-    # np.savetxt(path, matrix_2d, fmt="%d")
 
+    def save_matrix_rgb(self):
+        lab_image = self.original_image
+        file_name = self.file_name
+        folder_name = self.output_dir['matrices_rgb']
+        path = os.path.join(folder_name, file_name)
+        path = path + ".txt"
+
+        row, col, _ = lab_image.shape
+
+        # Crear o abrir un archivo de texto para escribir
+        with open(path, 'w') as archivo:
+            # Recorrer cada fila de la imagen
+            for i in range(row):
+                # Obtener los valores de los píxeles de la fila actual
+                fila = lab_image[i, :, :]
+
+                # Convertir la fila en una lista de strings para poder unirlos
+                fila_str = []
+                for j in range(col):
+                    # Obtener los valores L, A, B de cada píxel
+                    l, a, b = fila[j]
+                    fila_str.append(f"[{l},{a},{b}]")
+
+                # Unir todos los valores de la fila en una sola línea
+                fila_str = ' '.join(fila_str)
+
+                # Escribir la línea en el archivo
+                archivo.write(fila_str + '\n')
+
+    def save_matrix_salmon_score(self):
+        salmon_score = self.salmon_score
+        file_name = self.file_name
+        folder_name = self.output_dir['matrices_salmon_score']
+        path = os.path.join(folder_name, file_name)
+        path = path + ".txt"
+
+        row, col = salmon_score.shape
+
+        # Crear o abrir un archivo de texto para escribir
+        with open(path, 'w') as archivo:
+            # Recorrer cada fila de la imagen
+            for i in range(row):
+
+                # Convertir la fila en una lista de strings para poder unirlos
+                fila_str = []
+                for j in range(col):
+                    # Obtener los valores L, A, B de cada píxel
+                    current_score = salmon_score[i, j]
+                    fila_str.append(f"{current_score}, ")
+
+                # Unir todos los valores de la fila en una sola línea
+                fila_str = ' '.join(fila_str)
+
+                # Escribir la línea en el archivo
+                archivo.write(fila_str + '\n')
 
     def save_plots(self, imagen_gris, mascara):
 
@@ -280,7 +336,7 @@ class LabSegmentation():
         plt.imshow(mascara, cmap='gray')
         plt.title('Imagen Umbralizada')
         plt.axis('off')
-        plt.show()
+        # plt.show()
 
         #* Guarda las dos imagenes
         file_name = self.file_name
@@ -314,7 +370,7 @@ class LabSegmentation():
         plt.xlabel("SalmonFan Score")
         plt.ylabel("Pixels x 10^4")
         plt.title("Histograma de los salmon fan")
-        plt.show()
+        # plt.show()
 
         #* Guarda el histograma
         file_name = self.file_name
