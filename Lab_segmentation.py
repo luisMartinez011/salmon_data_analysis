@@ -56,13 +56,12 @@ class LabSegmentation():
     }
 
     output_dir = {
-        'histogramas': './datasets/modified-dataset/histogramas/',
-        # 'imagenes': './datasets/modified-dataset/imagenes/',
-        'matrices_lab': './datasets/modified-dataset/matrices_lab/',
-        'matrices_rgb': './datasets/modified-dataset/matrices_rgb/',
-        'matrices_salmon_score': './datasets/modified-dataset/matrices_salmon_score/',
-        'imagenes_umbralizadas': './datasets/modified-dataset/imagenes_umbralizadas/',
-        'promedio': './datasets/modified-dataset/promedio/'
+        'histogramas': './datasets/resultados/histogramas/',
+        # 'imagenes': './datasets/resultados/imagenes/',
+        'matrices_lab': './datasets/resultados/matrices_lab/',
+        'matrices_rgb': './datasets/resultados/matrices_rgb/',
+        'matrices_salmon_score': './datasets/resultados/matrices_salmon_score/',
+        'imagenes_umbralizadas': './datasets/resultados/imagenes_umbralizadas/',
     }
 
     #* Atributos
@@ -160,16 +159,11 @@ class LabSegmentation():
     # components, with values varying from −120 to +120
     def rgb_to_lab(self, r,g,b):
 
-
-        #Conversion Matrix
         matrix = [[0.2186, 0.1316, -0.0211, -0.0005, 0.0012, 0.0002, -0.0005,0.0002, -0.0007, 15.527],
                 [0.335, -0.5012, 0.1551, 0.0001, 0.0003, 0.001, 0.0011, -0.001, -0.001, -0.393],
                 [0.093, 0.435, -0.0538, -0.0001, 0.0005, -0.0007, 0.0001, 0.0003, -0.0018, -4.4257]]
 
-        # RGB values lie between 0 to 1.0
-        r = r
-        g = g
-        b = b
+
         rgb = [
             r,
             g,
@@ -181,20 +175,11 @@ class LabSegmentation():
             np.square(g),
             np.square(b),
             1
-            ] # RGB
+            ]
 
         cie = np.dot(matrix, rgb);
 
-
-        #  ! Values lie between -128 < b <= 127, -128 < a <= 127, 0 <= L <= 100
-        # Definir los rangos original y nuevo
-        rango_original = (-128, 127)
-        rango_nuevo = (-120, 120)
-
-        # Aplicar la transformación lineal utilizando np.interp
         L = cie[0]
-        # a = np.interp(cie[1], rango_original, rango_nuevo)
-        # b = np.interp(cie[2], rango_original, rango_nuevo)
         a = cie[1]
         b = cie[2]
 
@@ -238,7 +223,6 @@ class LabSegmentation():
         self.save_matrix_lab()
         self.save_matrix_rgb()
         self.save_matrix_salmon_score()
-        self.save_mean_score()
 
     def save_matrix_lab(self):
         lab_image = self.lab_image
@@ -249,24 +233,17 @@ class LabSegmentation():
 
         row, col, _ = lab_image.shape
 
-        # Crear o abrir un archivo de texto para escribir
         with open(path, 'w') as archivo:
-            # Recorrer cada fila de la imagen
             for i in range(row):
-                # Obtener los valores de los píxeles de la fila actual
                 fila = lab_image[i, :, :]
 
-                # Convertir la fila en una lista de strings para poder unirlos
                 fila_str = []
                 for j in range(col):
-                    # Obtener los valores L, A, B de cada píxel
                     l, a, b = fila[j]
                     fila_str.append(f"[{l},{a},{b}]")
 
-                # Unir todos los valores de la fila en una sola línea
                 fila_str = ' '.join(fila_str)
 
-                # Escribir la línea en el archivo
                 archivo.write(fila_str + '\n')
 
     def save_matrix_rgb(self):
@@ -278,24 +255,19 @@ class LabSegmentation():
 
         row, col, _ = lab_image.shape
 
-        # Crear o abrir un archivo de texto para escribir
         with open(path, 'w') as archivo:
-            # Recorrer cada fila de la imagen
+
             for i in range(row):
-                # Obtener los valores de los píxeles de la fila actual
+
                 fila = lab_image[i, :, :]
 
-                # Convertir la fila en una lista de strings para poder unirlos
                 fila_str = []
                 for j in range(col):
-                    # Obtener los valores L, A, B de cada píxel
                     l, a, b = fila[j]
                     fila_str.append(f"[{l},{a},{b}]")
 
-                # Unir todos los valores de la fila en una sola línea
                 fila_str = ' '.join(fila_str)
 
-                # Escribir la línea en el archivo
                 archivo.write(fila_str + '\n')
 
     def save_matrix_salmon_score(self):
@@ -307,22 +279,16 @@ class LabSegmentation():
 
         row, col = salmon_score.shape
 
-        # Crear o abrir un archivo de texto para escribir
         with open(path, 'w') as archivo:
-            # Recorrer cada fila de la imagen
             for i in range(row):
 
-                # Convertir la fila en una lista de strings para poder unirlos
                 fila_str = []
                 for j in range(col):
-                    # Obtener los valores L, A, B de cada píxel
                     current_score = salmon_score[i, j]
                     fila_str.append(f"{current_score}, ")
 
-                # Unir todos los valores de la fila en una sola línea
                 fila_str = ' '.join(fila_str)
 
-                # Escribir la línea en el archivo
                 archivo.write(fila_str + '\n')
 
     def save_plots(self, imagen_gris, mascara):
@@ -380,18 +346,6 @@ class LabSegmentation():
         plt.savefig(path)
         plt.close()
 
-    def save_mean_score(self):
-        salmon_score = self.salmon_score
-        elementos = salmon_score.ravel()
-        elementos_sin_cero = elementos[elementos != 0]
-        mean_fillet_score = "Promedio del nivel del color del salmon: " + str(np.mean(elementos_sin_cero))
-
-        file_name = self.file_name
-        folder_name = self.output_dir['promedio']
-        path = os.path.join(folder_name, file_name)
-        path = path + ".txt"
-
-        np.savetxt(path, [mean_fillet_score], fmt='%s')
 
 
 
